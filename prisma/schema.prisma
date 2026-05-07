@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Kind {
+  EXPENSE
+  REVENUE
+}
+
+enum Period {
+  MONTHLY
+  YEARLY
+}
+
+model User {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  color       String        @default("#7c5cff")
+  createdAt   DateTime      @default(now())
+  recurring   Recurring[]
+  txns        Transaction[]
+}
+
+model Category {
+  id        String        @id @default(cuid())
+  name      String
+  kind      Kind
+  icon      String        @default("•")
+  color     String        @default("#7c5cff")
+  sortOrder Int           @default(0)
+  recurring Recurring[]
+  txns      Transaction[]
+
+  @@unique([name, kind])
+}
+
+model Recurring {
+  id          String   @id @default(cuid())
+  kind        Kind
+  period      Period
+  amountCents Int
+  description String   @default("")
+  userId      String
+  categoryId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([categoryId])
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  kind        Kind     @default(EXPENSE)
+  amountCents Int
+  description String   @default("")
+  date        DateTime
+  userId      String
+  categoryId  String
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([date])
+  @@index([userId])
+  @@index([categoryId])
+}
+
+model Settings {
+  id                       Int @id @default(1)
+  monthlySavingsTargetCents Int @default(0)
+  yearlySavingsTargetCents  Int @default(0)
+  currency                 String @default("EUR")
+  locale                   String @default("de-DE")
+}
