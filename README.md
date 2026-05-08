@@ -1,4 +1,4 @@
-# Finansije
+# Go Run Finance
 
 A simple, mobile-first web app for couples to manage their personal monthly finances together.
 

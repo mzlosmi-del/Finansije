@@ -1,9 +1,22 @@
 {
-  "name": "Finansije",
-  "short_name": "Finansije",
+  "name": "Go Run Finance",
+  "short_name": "Go Run",
+  "description": "Mobile-first finance tracker for couples.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0b1020",
   "theme_color": "#0b1020",
-  "icons": []
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "32x32"
+    }
+  ]
 }

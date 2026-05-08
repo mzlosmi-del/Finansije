@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Go Run Finance">
+  <defs>
+    <linearGradient id="fav" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c5cff"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#fav)"/>
+  <g stroke="#fff" stroke-linecap="round" fill="none">
+    <line x1="6" y1="23" x2="11" y2="18" stroke-width="2.6"/>
+    <line x1="11" y1="23" x2="19" y2="15" stroke-width="2.8"/>
+    <line x1="16" y1="23" x2="26" y2="13" stroke-width="3"/>
+  </g>
+  <circle cx="26" cy="11" r="2.4" fill="#fff"/>
+</svg>
