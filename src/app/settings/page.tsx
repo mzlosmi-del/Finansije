@@ -27,7 +27,7 @@ export default async function SettingsPage() {
   ]);
 
   const currency = settings?.currency ?? "EUR";
-  const locale = settings?.locale ?? "sr-RS";
+  const locale = settings?.locale ?? "sr-Latn-RS";
   const monthly = (settings?.monthlySavingsTargetCents ?? 0) / 100;
   const yearly = (settings?.yearlySavingsTargetCents ?? 0) / 100;
 
@@ -88,7 +88,7 @@ export default async function SettingsPage() {
                 name="locale"
                 defaultValue={locale}
                 className="input mt-1"
-                placeholder="sr-RS"
+                placeholder="sr-Latn-RS"
               />
             </div>
           </div>

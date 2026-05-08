@@ -30,7 +30,7 @@ export default async function RecurringPage() {
     ]);
 
   const currency = settings?.currency ?? "EUR";
-  const locale = settings?.locale ?? "sr-RS";
+  const locale = settings?.locale ?? "sr-Latn-RS";
 
   const sections: { title: string; items: typeof recs }[] = [
     {

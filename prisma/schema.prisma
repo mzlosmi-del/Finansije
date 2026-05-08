@@ -79,5 +79,5 @@ model Settings {
   monthlySavingsTargetCents Int @default(0)
   yearlySavingsTargetCents  Int @default(0)
   currency                 String @default("EUR")
-  locale                   String @default("sr-RS")
+  locale                   String @default("sr-Latn-RS")
 }

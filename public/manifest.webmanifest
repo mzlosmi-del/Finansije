@@ -2,7 +2,7 @@
   "name": "Go Run Finance",
   "short_name": "Go Run",
   "description": "Mobilna aplikacija za vođenje kućnog budžeta.",
-  "lang": "sr",
+  "lang": "sr-Latn",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f6f7fb",

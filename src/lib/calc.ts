@@ -145,7 +145,7 @@ export async function getDashboardData(year: number, monthIndex0: number) {
       monthlySavingsTargetCents: 0,
       yearlySavingsTargetCents: 0,
       currency: "EUR",
-      locale: "sr-RS",
+      locale: "sr-Latn-RS",
     },
     recentTxns,
   };

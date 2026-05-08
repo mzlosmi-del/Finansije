@@ -40,7 +40,7 @@ export default async function RootLayout({
 }) {
   const { user, users } = await getCurrentPerson();
   return (
-    <html lang="sr">
+    <html lang="sr-Latn">
       <body>
         <div className="mx-auto max-w-md min-h-dvh flex flex-col">
           <header className="sticky top-0 z-20 bg-bg/85 backdrop-blur px-4 pt-4 pb-3 border-b border-line">

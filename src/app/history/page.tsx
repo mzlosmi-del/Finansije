@@ -15,7 +15,7 @@ export default async function HistoryPage() {
     prisma.settings.findUnique({ where: { id: 1 } }),
   ]);
   const currency = settings?.currency ?? "EUR";
-  const locale = settings?.locale ?? "sr-RS";
+  const locale = settings?.locale ?? "sr-Latn-RS";
 
   const groups = new Map<string, typeof txns>();
   for (const t of txns) {

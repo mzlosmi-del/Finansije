@@ -109,16 +109,19 @@ async function main() {
     });
   }
 
-  // Settings: ensure a row exists, and migrate de-DE to sr-RS once.
+  // Settings: ensure a row exists, and migrate any older locale value
+  // (de-DE, sr-RS, sr) to the Serbian Latin variant once.
   const settings = await prisma.settings.findUnique({ where: { id: 1 } });
+  const targetLocale = "sr-Latn-RS";
+  const oldLocales = new Set(["de-DE", "sr-RS", "sr"]);
   if (!settings) {
     await prisma.settings.create({
-      data: { id: 1, currency: "EUR", locale: "sr-RS" },
+      data: { id: 1, currency: "EUR", locale: targetLocale },
     });
-  } else if (settings.locale === "de-DE") {
+  } else if (oldLocales.has(settings.locale)) {
     await prisma.settings.update({
       where: { id: 1 },
-      data: { locale: "sr-RS" },
+      data: { locale: targetLocale },
     });
   }
 }

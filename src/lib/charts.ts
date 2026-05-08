@@ -55,7 +55,7 @@ export async function getMonthlyChartData(
       0
     );
 
-  const locale = settings?.locale ?? "sr-RS";
+  const locale = settings?.locale ?? "sr-Latn-RS";
   const points: MonthlyPoint[] = months.map(({ year, monthIndex0 }) => {
     const range = monthRange(year, monthIndex0);
     const inMonth = txns.filter(
