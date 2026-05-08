@@ -30,23 +30,23 @@ export default async function RecurringPage() {
     ]);
 
   const currency = settings?.currency ?? "EUR";
-  const locale = settings?.locale ?? "de-DE";
+  const locale = settings?.locale ?? "sr-RS";
 
   const sections: { title: string; items: typeof recs }[] = [
     {
-      title: "Monthly expenses",
+      title: "Mesečni rashodi",
       items: recs.filter((r) => r.kind === Kind.EXPENSE && r.period === Period.MONTHLY),
     },
     {
-      title: "Yearly expenses",
+      title: "Godišnji rashodi",
       items: recs.filter((r) => r.kind === Kind.EXPENSE && r.period === Period.YEARLY),
     },
     {
-      title: "Monthly revenues",
+      title: "Mesečni prihodi",
       items: recs.filter((r) => r.kind === Kind.REVENUE && r.period === Period.MONTHLY),
     },
     {
-      title: "Yearly revenues",
+      title: "Godišnji prihodi",
       items: recs.filter((r) => r.kind === Kind.REVENUE && r.period === Period.YEARLY),
     },
   ];
@@ -67,19 +67,19 @@ export default async function RecurringPage() {
         <section key={sec.title} className="card">
           <div className="label mb-2">{sec.title}</div>
           {sec.items.length === 0 ? (
-            <div className="text-muted text-sm py-2">None yet.</div>
+            <div className="text-muted text-sm py-2">Još nema unosa.</div>
           ) : (
-            <ul className="divide-y divide-white/5">
+            <ul className="divide-y divide-line">
               {sec.items.map((r) => (
                 <li key={r.id} className="flex items-center gap-3 py-2.5">
                   <div
                     className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center"
-                    style={{ background: `${r.category.color}25` }}
+                    style={{ background: `${r.category.color}20` }}
                   >
                     <span>{r.category.icon}</span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">
+                    <div className="font-medium truncate text-ink">
                       {r.description || r.category.name}
                     </div>
                     <div className="text-xs text-muted truncate">
@@ -93,7 +93,7 @@ export default async function RecurringPage() {
                             currency={currency}
                             locale={locale}
                           />
-                          /mo
+                          /mes
                         </>
                       )}
                     </div>
@@ -114,7 +114,7 @@ export default async function RecurringPage() {
                     <input type="hidden" name="id" value={r.id} />
                     <button
                       type="submit"
-                      aria-label="Delete"
+                      aria-label="Obriši"
                       className="text-muted hover:text-bad px-1"
                     >
                       ✕

@@ -56,27 +56,29 @@ export default async function Dashboard({
         <Link
           href={`/?y=${prev.year}&m=${prev.monthIndex0}`}
           className="btn-ghost text-sm"
+          aria-label="Prethodni mesec"
         >
           ←
         </Link>
         <div className="text-center">
-          <div className="label">Month</div>
-          <div className="font-semibold capitalize">
+          <div className="label">Mesec</div>
+          <div className="font-semibold capitalize text-ink">
             {monthLabel(year, monthIndex0, locale)}
           </div>
         </div>
         <Link
           href={`/?y=${next.year}&m=${next.monthIndex0}`}
           className="btn-ghost text-sm"
+          aria-label="Sledeći mesec"
         >
           →
         </Link>
       </div>
 
       <section className="card">
-        <div className="flex items-baseline justify-between">
+        <div className="flex items-baseline justify-between gap-3">
           <div>
-            <div className="label">Net this month</div>
+            <div className="label">Saldo ovog meseca</div>
             <div className="text-3xl font-bold tabular-nums">
               <Money
                 cents={m.total.net}
@@ -88,7 +90,7 @@ export default async function Dashboard({
             </div>
           </div>
           <div className="text-right">
-            <div className="label">Revenue</div>
+            <div className="label">Prihodi</div>
             <div className="text-good font-semibold tabular-nums">
               <Money
                 cents={m.total.revenue}
@@ -96,7 +98,7 @@ export default async function Dashboard({
                 locale={locale}
               />
             </div>
-            <div className="label mt-1">Expenses</div>
+            <div className="label mt-1">Rashodi</div>
             <div className="text-bad font-semibold tabular-nums">
               <Money
                 cents={m.total.expense}
@@ -111,7 +113,7 @@ export default async function Dashboard({
           <div className="mt-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted">
-                Savings target{" "}
+                Cilj štednje{" "}
                 <Money
                   cents={monthlyTarget}
                   currency={currency}
@@ -126,7 +128,7 @@ export default async function Dashboard({
                 {monthlyPct}%
               </span>
             </div>
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/10">
+            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/[0.06]">
               <div
                 className={`h-full ${
                   monthlySaved >= monthlyTarget ? "bg-good" : "bg-warn"
@@ -139,12 +141,12 @@ export default async function Dashboard({
       </section>
 
       <section className="card">
-        <div className="label mb-3">Per person</div>
+        <div className="label mb-3">Po osobi</div>
         <div className="grid grid-cols-1 gap-3">
           {m.perUser.map((p) => (
             <div
               key={p.user.id}
-              className="rounded-xl bg-white/5 p-3 flex items-center justify-between"
+              className="rounded-xl bg-black/[0.035] border border-line p-3 flex items-center justify-between"
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span
@@ -152,10 +154,10 @@ export default async function Dashboard({
                   style={{ background: p.user.color }}
                 />
                 <div className="min-w-0">
-                  <div className="font-medium truncate">{p.user.name}</div>
+                  <div className="font-medium truncate text-ink">{p.user.name}</div>
                   <div className="text-xs text-muted">
-                    Rev <Money cents={p.revenue} currency={currency} locale={locale} />
-                    {" · "}Exp <Money cents={p.expense} currency={currency} locale={locale} />
+                    Prih <Money cents={p.revenue} currency={currency} locale={locale} />
+                    {" · "}Rash <Money cents={p.expense} currency={currency} locale={locale} />
                   </div>
                 </div>
               </div>
@@ -174,7 +176,7 @@ export default async function Dashboard({
       <section className="card">
         <div className="flex items-baseline justify-between">
           <div>
-            <div className="label">Year {year} · Net</div>
+            <div className="label">Godina {year} · Saldo</div>
             <div className="text-xl font-semibold tabular-nums">
               <Money
                 cents={y.total.net}
@@ -187,8 +189,8 @@ export default async function Dashboard({
           </div>
           {yearlyTarget > 0 && (
             <div className="text-right text-sm">
-              <div className="label">Target</div>
-              <div>
+              <div className="label">Cilj</div>
+              <div className="text-ink">
                 <Money
                   cents={yearlyTarget}
                   currency={currency}
@@ -199,7 +201,7 @@ export default async function Dashboard({
           )}
         </div>
         {yearlyTarget > 0 && (
-          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-black/[0.06]">
             <div
               className={`h-full ${
                 yearlySaved >= yearlyTarget ? "bg-good" : "bg-warn"
@@ -212,17 +214,17 @@ export default async function Dashboard({
 
       <section className="card">
         <div className="flex items-center justify-between mb-2">
-          <div className="label">Recent this month</div>
+          <div className="label">Skorašnji unosi</div>
           <Link href="/history" className="text-sm text-accent">
-            See all
+            Prikaži sve
           </Link>
         </div>
         {recentTxns.length === 0 ? (
           <div className="text-muted text-sm py-6 text-center">
-            No entries yet. Tap ＋ to add.
+            Još nema unosa. Pritisnite ＋ da dodate.
           </div>
         ) : (
-          <ul className="divide-y divide-white/5">
+          <ul className="divide-y divide-line">
             {recentTxns.map((t) => (
               <li
                 key={t.id}
@@ -230,13 +232,13 @@ export default async function Dashboard({
               >
                 <div
                   className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-base"
-                  style={{ background: `${t.category.color}25` }}
+                  style={{ background: `${t.category.color}20` }}
                 >
                   <span>{t.category.icon}</span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium truncate">
+                    <span className="font-medium truncate text-ink">
                       {t.description || t.category.name}
                     </span>
                   </div>
@@ -266,7 +268,7 @@ export default async function Dashboard({
                   <input type="hidden" name="id" value={t.id} />
                   <button
                     type="submit"
-                    aria-label="Delete"
+                    aria-label="Obriši"
                     className="text-muted hover:text-bad px-1"
                   >
                     ✕

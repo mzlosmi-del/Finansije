@@ -24,7 +24,7 @@ export function PersonSwitcher({
   }
 
   return (
-    <div className="flex items-center gap-1 rounded-full bg-white/5 p-1">
+    <div className="flex items-center gap-1 rounded-full bg-black/[0.05] border border-line p-1">
       {users.map((u) => {
         const active = u.id === currentId;
         return (
@@ -34,7 +34,7 @@ export function PersonSwitcher({
             onClick={() => setPerson(u.id)}
             disabled={pending}
             className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${
-              active ? "text-white" : "text-muted"
+              active ? "text-white" : "text-ink/70"
             }`}
             style={active ? { background: u.color } : undefined}
           >

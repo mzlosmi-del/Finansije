@@ -3,62 +3,57 @@ import { PrismaClient, Kind } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // Members: customize names freely later in /settings.
-  const members = [
-    { name: "Partner 1", color: "#7c5cff" },
-    { name: "Partner 2", color: "#22c55e" },
-  ];
-  for (const m of members) {
-    await prisma.user.upsert({
-      where: { name: m.name },
-      update: { color: m.color },
-      create: m,
+  // Members are seeded ONLY on a truly empty DB so they don't get
+  // duplicated after the user renames them.
+  const userCount = await prisma.user.count();
+  if (userCount === 0) {
+    await prisma.user.createMany({
+      data: [
+        { name: "Partner 1", color: "#7c5cff" },
+        { name: "Partner 2", color: "#22c55e" },
+      ],
     });
   }
 
+  // Same rule for categories: only seed defaults when none exist
+  // for that kind, so renamed categories aren't recreated.
   const expenseCats = [
-    { name: "Groceries", icon: "🛒", color: "#22c55e" },
-    { name: "Rent", icon: "🏠", color: "#7c5cff" },
-    { name: "Utilities", icon: "💡", color: "#f59e0b" },
-    { name: "Transport", icon: "🚗", color: "#3b82f6" },
-    { name: "Dining", icon: "🍽️", color: "#ef4444" },
-    { name: "Health", icon: "💊", color: "#ec4899" },
-    { name: "Leisure", icon: "🎬", color: "#a855f7" },
-    { name: "Shopping", icon: "🛍️", color: "#06b6d4" },
-    { name: "Travel", icon: "✈️", color: "#0ea5e9" },
-    { name: "Subscriptions", icon: "📺", color: "#64748b" },
-    { name: "Other", icon: "•", color: "#94a3b8" },
+    { name: "Namirnice", icon: "🛒", color: "#22c55e" },
+    { name: "Stanarina", icon: "🏠", color: "#7c5cff" },
+    { name: "Računi", icon: "💡", color: "#f59e0b" },
+    { name: "Prevoz", icon: "🚗", color: "#3b82f6" },
+    { name: "Restorani", icon: "🍽️", color: "#ef4444" },
+    { name: "Zdravlje", icon: "💊", color: "#ec4899" },
+    { name: "Razonoda", icon: "🎬", color: "#a855f7" },
+    { name: "Kupovina", icon: "🛍️", color: "#06b6d4" },
+    { name: "Putovanje", icon: "✈️", color: "#0ea5e9" },
+    { name: "Pretplate", icon: "📺", color: "#64748b" },
+    { name: "Ostalo", icon: "•", color: "#94a3b8" },
   ];
   const revenueCats = [
-    { name: "Salary", icon: "💼", color: "#22c55e" },
+    { name: "Plata", icon: "💼", color: "#22c55e" },
     { name: "Bonus", icon: "🎁", color: "#7c5cff" },
-    { name: "Investments", icon: "📈", color: "#0ea5e9" },
-    { name: "Other", icon: "•", color: "#94a3b8" },
+    { name: "Investicije", icon: "📈", color: "#0ea5e9" },
+    { name: "Ostalo", icon: "•", color: "#94a3b8" },
   ];
 
-  let i = 0;
-  for (const c of expenseCats) {
-    await prisma.category.upsert({
-      where: { name_kind: { name: c.name, kind: Kind.EXPENSE } },
-      update: { icon: c.icon, color: c.color, sortOrder: i },
-      create: { ...c, kind: Kind.EXPENSE, sortOrder: i },
+  const expCount = await prisma.category.count({ where: { kind: Kind.EXPENSE } });
+  if (expCount === 0) {
+    await prisma.category.createMany({
+      data: expenseCats.map((c, i) => ({ ...c, kind: Kind.EXPENSE, sortOrder: i })),
     });
-    i++;
   }
-  i = 0;
-  for (const c of revenueCats) {
-    await prisma.category.upsert({
-      where: { name_kind: { name: c.name, kind: Kind.REVENUE } },
-      update: { icon: c.icon, color: c.color, sortOrder: i },
-      create: { ...c, kind: Kind.REVENUE, sortOrder: i },
+  const revCount = await prisma.category.count({ where: { kind: Kind.REVENUE } });
+  if (revCount === 0) {
+    await prisma.category.createMany({
+      data: revenueCats.map((c, i) => ({ ...c, kind: Kind.REVENUE, sortOrder: i })),
     });
-    i++;
   }
 
   await prisma.settings.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1 },
+    create: { id: 1, currency: "EUR", locale: "sr-RS" },
   });
 }
 

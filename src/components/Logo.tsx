@@ -46,8 +46,8 @@ export function LogoMark({
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
     <span className={`flex items-baseline gap-1 leading-none ${className}`}>
-      <span className="font-extrabold tracking-tight">Go</span>
-      <span className="font-semibold tracking-tight text-white/90">Run</span>
+      <span className="font-extrabold tracking-tight text-ink">Go</span>
+      <span className="font-semibold tracking-tight text-ink/70">Run</span>
       <span className="font-extrabold tracking-tight text-accent">Finance</span>
     </span>
   );

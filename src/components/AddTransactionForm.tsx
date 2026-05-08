@@ -41,14 +41,13 @@ export function AddTransactionForm({
   );
 
   const decimalSep = (1.1).toLocaleString(locale).includes(",") ? "," : ".";
-  void currency; // currency symbol shown via inputMode-friendly suffix
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!userId) return setError("Pick a person.");
-    if (!categoryId) return setError("Pick a category.");
-    if (!amount || amount === "0") return setError("Enter an amount.");
+    if (!userId) return setError("Izaberite osobu.");
+    if (!categoryId) return setError("Izaberite kategoriju.");
+    if (!amount || amount === "0") return setError("Unesite iznos.");
 
     const fd = new FormData();
     fd.set("userId", userId);
@@ -58,7 +57,9 @@ export function AddTransactionForm({
     fd.set("kind", kind);
     fd.set("date", date);
     start(() => {
-      addTransactionAction(fd).catch((err) => setError(err?.message ?? "Failed"));
+      addTransactionAction(fd).catch((err) =>
+        setError(err?.message ?? "Greška")
+      );
     });
   }
 
@@ -72,10 +73,10 @@ export function AddTransactionForm({
             setCategoryId("");
           }}
           className={`btn ${
-            kind === Kind.EXPENSE ? "bg-bad text-white" : "bg-white/5 text-muted"
+            kind === Kind.EXPENSE ? "bg-bad text-white" : "bg-black/5 text-muted"
           }`}
         >
-          − Expense
+          − Rashod
         </button>
         <button
           type="button"
@@ -84,15 +85,15 @@ export function AddTransactionForm({
             setCategoryId("");
           }}
           className={`btn ${
-            kind === Kind.REVENUE ? "bg-good text-white" : "bg-white/5 text-muted"
+            kind === Kind.REVENUE ? "bg-good text-white" : "bg-black/5 text-muted"
           }`}
         >
-          + Revenue
+          + Prihod
         </button>
       </div>
 
       <div className="card">
-        <label className="label">Amount</label>
+        <label className="label">Iznos</label>
         <input
           autoFocus
           inputMode="decimal"
@@ -100,7 +101,7 @@ export function AddTransactionForm({
           placeholder={`0${decimalSep}00`}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="mt-1 w-full bg-transparent text-4xl font-bold tabular-nums outline-none placeholder:text-white/20"
+          className="mt-1 w-full bg-transparent text-4xl font-bold tabular-nums outline-none placeholder:text-black/15 text-ink"
         />
         <div className="text-muted text-sm mt-1">
           {currency} · {locale}
@@ -108,7 +109,7 @@ export function AddTransactionForm({
       </div>
 
       <div>
-        <div className="label mb-2">Category</div>
+        <div className="label mb-2">Kategorija</div>
         <div className="flex flex-wrap gap-2">
           {cats.map((c) => {
             const active = c.id === categoryId;
@@ -120,8 +121,8 @@ export function AddTransactionForm({
                 className={`chip ${active ? "chip-active" : ""}`}
                 style={
                   active
-                    ? { background: c.color }
-                    : { background: `${c.color}20` }
+                    ? { background: c.color, color: "white" }
+                    : { background: `${c.color}1A`, color: "#0f172a" }
                 }
               >
                 <span>{c.icon}</span>
@@ -133,7 +134,7 @@ export function AddTransactionForm({
       </div>
 
       <div>
-        <div className="label mb-2">Paid by</div>
+        <div className="label mb-2">Platio/la</div>
         <div className="grid grid-cols-2 gap-2">
           {users.map((u) => {
             const active = u.id === userId;
@@ -142,7 +143,7 @@ export function AddTransactionForm({
                 key={u.id}
                 type="button"
                 onClick={() => setUserId(u.id)}
-                className={`btn ${active ? "" : "bg-white/5 text-muted"}`}
+                className={`btn ${active ? "" : "bg-black/5 text-ink"}`}
                 style={active ? { background: u.color, color: "white" } : undefined}
               >
                 {u.name}
@@ -154,7 +155,7 @@ export function AddTransactionForm({
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <div className="label mb-1">Date</div>
+          <div className="label mb-1">Datum</div>
           <input
             type="date"
             value={date}
@@ -163,10 +164,10 @@ export function AddTransactionForm({
           />
         </div>
         <div>
-          <div className="label mb-1">Note</div>
+          <div className="label mb-1">Napomena</div>
           <input
             type="text"
-            placeholder="Optional"
+            placeholder="Opciono"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="input"
@@ -181,7 +182,7 @@ export function AddTransactionForm({
         disabled={pending}
         className="btn-primary w-full text-base disabled:opacity-50"
       >
-        {pending ? "Saving…" : "Save"}
+        {pending ? "Čuvam…" : "Sačuvaj"}
       </button>
     </form>
   );

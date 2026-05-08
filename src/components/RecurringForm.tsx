@@ -42,9 +42,9 @@ export function RecurringForm({
   function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!userId) return setError("Pick a person.");
-    if (!categoryId) return setError("Pick a category.");
-    if (!amount) return setError("Enter an amount.");
+    if (!userId) return setError("Izaberite osobu.");
+    if (!categoryId) return setError("Izaberite kategoriju.");
+    if (!amount) return setError("Unesite iznos.");
 
     const fd = new FormData();
     fd.set("userId", userId);
@@ -61,7 +61,7 @@ export function RecurringForm({
         setCategoryId("");
         setOpen(false);
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Failed";
+        const msg = err instanceof Error ? err.message : "Greška";
         setError(msg);
       }
     });
@@ -74,7 +74,7 @@ export function RecurringForm({
         onClick={() => setOpen(true)}
         className="btn-primary w-full"
       >
-        ＋ Add recurring entry
+        ＋ Dodaj redovan unos
       </button>
     );
   }
@@ -82,13 +82,13 @@ export function RecurringForm({
   return (
     <form onSubmit={submit} className="card space-y-4">
       <div className="flex items-center justify-between">
-        <div className="font-semibold">New recurring</div>
+        <div className="font-semibold text-ink">Novi redovan unos</div>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="text-muted text-sm"
         >
-          Close
+          Zatvori
         </button>
       </div>
 
@@ -100,10 +100,10 @@ export function RecurringForm({
             setCategoryId("");
           }}
           className={`btn ${
-            kind === Kind.EXPENSE ? "bg-bad text-white" : "bg-white/5 text-muted"
+            kind === Kind.EXPENSE ? "bg-bad text-white" : "bg-black/5 text-muted"
           }`}
         >
-          − Expense
+          − Rashod
         </button>
         <button
           type="button"
@@ -112,10 +112,10 @@ export function RecurringForm({
             setCategoryId("");
           }}
           className={`btn ${
-            kind === Kind.REVENUE ? "bg-good text-white" : "bg-white/5 text-muted"
+            kind === Kind.REVENUE ? "bg-good text-white" : "bg-black/5 text-muted"
           }`}
         >
-          + Revenue
+          + Prihod
         </button>
       </div>
 
@@ -124,31 +124,31 @@ export function RecurringForm({
           type="button"
           onClick={() => setPeriod(Period.MONTHLY)}
           className={`btn ${
-            period === Period.MONTHLY ? "bg-accent text-white" : "bg-white/5 text-muted"
+            period === Period.MONTHLY ? "bg-accent text-white" : "bg-black/5 text-muted"
           }`}
         >
-          Monthly
+          Mesečno
         </button>
         <button
           type="button"
           onClick={() => setPeriod(Period.YEARLY)}
           className={`btn ${
-            period === Period.YEARLY ? "bg-accent text-white" : "bg-white/5 text-muted"
+            period === Period.YEARLY ? "bg-accent text-white" : "bg-black/5 text-muted"
           }`}
         >
-          Yearly (÷12)
+          Godišnje (÷12)
         </button>
       </div>
 
       <div>
-        <label className="label">Amount</label>
+        <label className="label">Iznos</label>
         <input
           inputMode="decimal"
           pattern="[0-9.,]*"
           placeholder={`0${decimalSep}00`}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="mt-1 w-full bg-transparent text-3xl font-bold tabular-nums outline-none placeholder:text-white/20"
+          className="mt-1 w-full bg-transparent text-3xl font-bold tabular-nums outline-none placeholder:text-black/15 text-ink"
         />
         <div className="text-muted text-xs mt-1">
           {currency} · {locale}
@@ -156,7 +156,7 @@ export function RecurringForm({
       </div>
 
       <div>
-        <div className="label mb-2">Category</div>
+        <div className="label mb-2">Kategorija</div>
         <div className="flex flex-wrap gap-2">
           {cats.map((c) => {
             const active = c.id === categoryId;
@@ -168,8 +168,8 @@ export function RecurringForm({
                 className={`chip ${active ? "chip-active" : ""}`}
                 style={
                   active
-                    ? { background: c.color }
-                    : { background: `${c.color}20` }
+                    ? { background: c.color, color: "white" }
+                    : { background: `${c.color}1A`, color: "#0f172a" }
                 }
               >
                 <span>{c.icon}</span>
@@ -181,7 +181,7 @@ export function RecurringForm({
       </div>
 
       <div>
-        <div className="label mb-2">Person</div>
+        <div className="label mb-2">Osoba</div>
         <div className="grid grid-cols-2 gap-2">
           {users.map((u) => {
             const active = u.id === userId;
@@ -190,7 +190,7 @@ export function RecurringForm({
                 key={u.id}
                 type="button"
                 onClick={() => setUserId(u.id)}
-                className={`btn ${active ? "" : "bg-white/5 text-muted"}`}
+                className={`btn ${active ? "" : "bg-black/5 text-ink"}`}
                 style={active ? { background: u.color, color: "white" } : undefined}
               >
                 {u.name}
@@ -201,10 +201,10 @@ export function RecurringForm({
       </div>
 
       <div>
-        <div className="label mb-1">Note</div>
+        <div className="label mb-1">Napomena</div>
         <input
           type="text"
-          placeholder="Optional"
+          placeholder="Opciono"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           className="input"
@@ -218,7 +218,7 @@ export function RecurringForm({
         disabled={pending}
         className="btn-primary w-full disabled:opacity-50"
       >
-        {pending ? "Saving…" : "Save"}
+        {pending ? "Čuvam…" : "Sačuvaj"}
       </button>
     </form>
   );

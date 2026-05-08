@@ -30,7 +30,7 @@ export async function addTransactionAction(formData: FormData) {
   const date = dateStr ? new Date(dateStr) : new Date();
 
   if (!userId || !categoryId || amountCents <= 0) {
-    throw new Error("Missing user, category, or amount");
+    throw new Error("Nedostaje osoba, kategorija ili iznos.");
   }
   await prisma.transaction.create({
     data: { userId, categoryId, description, amountCents, kind, date },
@@ -55,7 +55,7 @@ export async function addRecurringAction(formData: FormData) {
   const kind = asKind(formData.get("kind"));
   const period = asPeriod(formData.get("period"));
   if (!userId || !categoryId || amountCents <= 0) {
-    throw new Error("Missing user, category, or amount");
+    throw new Error("Nedostaje osoba, kategorija ili iznos.");
   }
   await prisma.recurring.create({
     data: { userId, categoryId, description, amountCents, kind, period },
@@ -124,6 +124,28 @@ export async function renameUserAction(formData: FormData) {
   revalidatePath("/", "layout");
 }
 
+export async function addUserAction(formData: FormData) {
+  const name = String(formData.get("name") ?? "").trim();
+  const color = String(formData.get("color") ?? "#7c5cff");
+  if (!name) return;
+  await prisma.user.create({ data: { name, color } });
+  revalidatePath("/", "layout");
+}
+
+export async function deleteUserAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const [tx, rc] = await Promise.all([
+    prisma.transaction.count({ where: { userId: id } }),
+    prisma.recurring.count({ where: { userId: id } }),
+  ]);
+  if (tx + rc > 0) {
+    throw new Error("Član ima unose i ne može se obrisati.");
+  }
+  await prisma.user.delete({ where: { id } });
+  revalidatePath("/", "layout");
+}
+
 export async function addCategoryAction(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const kind = asKind(formData.get("kind"));
@@ -145,7 +167,7 @@ export async function deleteCategoryAction(formData: FormData) {
     prisma.recurring.count({ where: { categoryId: id } }),
   ]);
   if (tx + rc > 0) {
-    throw new Error("Category is in use; cannot delete.");
+    throw new Error("Kategorija je u upotrebi; ne može se obrisati.");
   }
   await prisma.category.delete({ where: { id } });
   revalidatePath("/settings");
