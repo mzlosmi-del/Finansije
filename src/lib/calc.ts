@@ -2,186 +2,151 @@ import { prisma } from "@/lib/db";
 import { Kind, Period } from "@prisma/client";
 import { monthRange, yearRange } from "@/lib/dates";
 
-export type PerUserAmount = { userId: string; amountCents: number };
+export type DashboardUserRow = {
+  user: { id: string; name: string; color: string };
+  expense: number;
+  revenue: number;
+  net: number;
+};
 
-function emptyMap(users: { id: string }[]) {
-  const m = new Map<string, number>();
-  for (const u of users) m.set(u.id, 0);
-  return m;
-}
-
-function toArr(map: Map<string, number>): PerUserAmount[] {
-  return [...map.entries()].map(([userId, amountCents]) => ({
-    userId,
-    amountCents,
-  }));
-}
+export type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
 
 /**
- * Returns recurring per-user totals already projected on a monthly basis.
- * Yearly recurring entries are divided by 12.
+ * Fetches everything the dashboard needs in a single round of parallel
+ * queries (6) and aggregates per-user totals in JS, replacing the older
+ * implementation that did ~15 round trips.
  */
-export async function recurringMonthlyByUser(kind: Kind) {
-  const [users, recs] = await Promise.all([
-    prisma.user.findMany({ select: { id: true } }),
-    prisma.recurring.findMany({ where: { kind } }),
-  ]);
-  const map = emptyMap(users);
-  for (const r of recs) {
-    const monthly =
-      r.period === Period.MONTHLY ? r.amountCents : r.amountCents / 12;
-    map.set(r.userId, (map.get(r.userId) ?? 0) + monthly);
-  }
-  // round per user
-  for (const [k, v] of map) map.set(k, Math.round(v));
-  return toArr(map);
-}
+export async function getDashboardData(year: number, monthIndex0: number) {
+  const month = monthRange(year, monthIndex0);
+  const yearR = yearRange(year);
 
-export async function transactionsInRangeByUser(
-  start: Date,
-  end: Date,
-  kind: Kind
-) {
-  const [users, txns] = await Promise.all([
-    prisma.user.findMany({ select: { id: true } }),
-    prisma.transaction.findMany({
-      where: { kind, date: { gte: start, lt: end } },
-      select: { userId: true, amountCents: true },
-    }),
-  ]);
-  const map = emptyMap(users);
-  for (const t of txns) map.set(t.userId, (map.get(t.userId) ?? 0) + t.amountCents);
-  return toArr(map);
-}
-
-export async function monthSummary(year: number, monthIndex0: number) {
-  const { start, end } = monthRange(year, monthIndex0);
   const [
     users,
-    recExpense,
-    recRevenue,
-    txnExpense,
-    txnRevenue,
     settings,
+    recurring,
+    txnsThisMonthAgg,
+    txnsThisYearAgg,
+    recentTxns,
   ] = await Promise.all([
     prisma.user.findMany({ orderBy: { createdAt: "asc" } }),
-    recurringMonthlyByUser(Kind.EXPENSE),
-    recurringMonthlyByUser(Kind.REVENUE),
-    transactionsInRangeByUser(start, end, Kind.EXPENSE),
-    transactionsInRangeByUser(start, end, Kind.REVENUE),
     prisma.settings.findUnique({ where: { id: 1 } }),
+    prisma.recurring.findMany({
+      select: {
+        userId: true,
+        kind: true,
+        period: true,
+        amountCents: true,
+      },
+    }),
+    prisma.transaction.groupBy({
+      by: ["userId", "kind"],
+      where: { date: { gte: month.start, lt: month.end } },
+      _sum: { amountCents: true },
+    }),
+    prisma.transaction.groupBy({
+      by: ["userId", "kind"],
+      where: { date: { gte: yearR.start, lt: yearR.end } },
+      _sum: { amountCents: true },
+    }),
+    prisma.transaction.findMany({
+      where: { date: { gte: month.start, lt: month.end } },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+      take: 10,
+      include: { user: true, category: true },
+    }),
   ]);
 
-  const sumMap = (arr: PerUserAmount[]) => {
-    const m = new Map<string, number>();
-    for (const a of arr) m.set(a.userId, (m.get(a.userId) ?? 0) + a.amountCents);
+  type Acc = Map<string, { expense: number; revenue: number }>;
+  const newAcc = (): Acc => {
+    const m: Acc = new Map();
+    for (const u of users) m.set(u.id, { expense: 0, revenue: 0 });
     return m;
   };
-  const expByUser = sumMap([...recExpense, ...txnExpense]);
-  const revByUser = sumMap([...recRevenue, ...txnRevenue]);
 
-  const perUser = users.map((u) => {
-    const expense = expByUser.get(u.id) ?? 0;
-    const revenue = revByUser.get(u.id) ?? 0;
+  const monthAcc = newAcc();
+  const yearAcc = newAcc();
+
+  // Recurring entries: project monthly and yearly contributions.
+  for (const r of recurring) {
+    const monthlyShare =
+      r.period === Period.MONTHLY ? r.amountCents : r.amountCents / 12;
+    const yearlyShare =
+      r.period === Period.YEARLY ? r.amountCents : r.amountCents * 12;
+    const mb = monthAcc.get(r.userId);
+    const yb = yearAcc.get(r.userId);
+    if (!mb || !yb) continue;
+    if (r.kind === Kind.EXPENSE) {
+      mb.expense += monthlyShare;
+      yb.expense += yearlyShare;
+    } else {
+      mb.revenue += monthlyShare;
+      yb.revenue += yearlyShare;
+    }
+  }
+
+  // One-off transactions for the selected month.
+  for (const row of txnsThisMonthAgg) {
+    const b = monthAcc.get(row.userId);
+    if (!b) continue;
+    const v = row._sum.amountCents ?? 0;
+    if (row.kind === Kind.EXPENSE) b.expense += v;
+    else b.revenue += v;
+  }
+  // One-off transactions for the full year.
+  for (const row of txnsThisYearAgg) {
+    const b = yearAcc.get(row.userId);
+    if (!b) continue;
+    const v = row._sum.amountCents ?? 0;
+    if (row.kind === Kind.EXPENSE) b.expense += v;
+    else b.revenue += v;
+  }
+
+  const monthPerUser: DashboardUserRow[] = users.map((u) => {
+    const b = monthAcc.get(u.id) ?? { expense: 0, revenue: 0 };
     return {
       user: u,
-      expense,
-      revenue,
-      net: revenue - expense,
-      recurringExpense: recExpense.find((x) => x.userId === u.id)?.amountCents ?? 0,
-      recurringRevenue: recRevenue.find((x) => x.userId === u.id)?.amountCents ?? 0,
-      dailyExpense: txnExpense.find((x) => x.userId === u.id)?.amountCents ?? 0,
-      dailyRevenue: txnRevenue.find((x) => x.userId === u.id)?.amountCents ?? 0,
+      expense: Math.round(b.expense),
+      revenue: Math.round(b.revenue),
+      net: Math.round(b.revenue - b.expense),
+    };
+  });
+  const yearPerUser: DashboardUserRow[] = users.map((u) => {
+    const b = yearAcc.get(u.id) ?? { expense: 0, revenue: 0 };
+    return {
+      user: u,
+      expense: Math.round(b.expense),
+      revenue: Math.round(b.revenue),
+      net: Math.round(b.revenue - b.expense),
     };
   });
 
-  const total = perUser.reduce(
-    (acc, p) => ({
-      expense: acc.expense + p.expense,
-      revenue: acc.revenue + p.revenue,
-      net: acc.net + p.net,
-    }),
-    { expense: 0, revenue: 0, net: 0 }
-  );
+  const sumTotals = (rows: DashboardUserRow[]) =>
+    rows.reduce(
+      (a, p) => ({
+        expense: a.expense + p.expense,
+        revenue: a.revenue + p.revenue,
+        net: a.net + p.net,
+      }),
+      { expense: 0, revenue: 0, net: 0 }
+    );
 
   return {
-    perUser,
-    total,
+    month: {
+      perUser: monthPerUser,
+      total: sumTotals(monthPerUser),
+      range: month,
+    },
+    year: {
+      perUser: yearPerUser,
+      total: sumTotals(yearPerUser),
+    },
     settings: settings ?? {
       id: 1,
       monthlySavingsTargetCents: 0,
       yearlySavingsTargetCents: 0,
       currency: "EUR",
-      locale: "de-DE",
+      locale: "sr-RS",
     },
-    range: { start, end },
-  };
-}
-
-export async function yearSummary(year: number) {
-  const { start, end } = yearRange(year);
-  const [
-    users,
-    recExpense,
-    recRevenue,
-    txnExpense,
-    txnRevenue,
-    settings,
-  ] = await Promise.all([
-    prisma.user.findMany({ orderBy: { createdAt: "asc" } }),
-    prisma.recurring.findMany({ where: { kind: Kind.EXPENSE } }),
-    prisma.recurring.findMany({ where: { kind: Kind.REVENUE } }),
-    prisma.transaction.findMany({
-      where: { kind: Kind.EXPENSE, date: { gte: start, lt: end } },
-      select: { userId: true, amountCents: true },
-    }),
-    prisma.transaction.findMany({
-      where: { kind: Kind.REVENUE, date: { gte: start, lt: end } },
-      select: { userId: true, amountCents: true },
-    }),
-    prisma.settings.findUnique({ where: { id: 1 } }),
-  ]);
-
-  const yearOf = (r: { period: Period; amountCents: number }) =>
-    r.period === Period.YEARLY ? r.amountCents : r.amountCents * 12;
-
-  const sumByUser = (
-    rec: { userId: string; period: Period; amountCents: number }[],
-    txns: { userId: string; amountCents: number }[]
-  ) => {
-    const m = new Map<string, number>();
-    for (const r of rec) m.set(r.userId, (m.get(r.userId) ?? 0) + yearOf(r));
-    for (const t of txns)
-      m.set(t.userId, (m.get(t.userId) ?? 0) + t.amountCents);
-    return m;
-  };
-
-  const expByUser = sumByUser(recExpense, txnExpense);
-  const revByUser = sumByUser(recRevenue, txnRevenue);
-
-  const perUser = users.map((u) => ({
-    user: u,
-    expense: expByUser.get(u.id) ?? 0,
-    revenue: revByUser.get(u.id) ?? 0,
-    net: (revByUser.get(u.id) ?? 0) - (expByUser.get(u.id) ?? 0),
-  }));
-  const total = perUser.reduce(
-    (a, p) => ({
-      expense: a.expense + p.expense,
-      revenue: a.revenue + p.revenue,
-      net: a.net + p.net,
-    }),
-    { expense: 0, revenue: 0, net: 0 }
-  );
-  return {
-    perUser,
-    total,
-    settings: settings ?? {
-      id: 1,
-      monthlySavingsTargetCents: 0,
-      yearlySavingsTargetCents: 0,
-      currency: "EUR",
-      locale: "de-DE",
-    },
+    recentTxns,
   };
 }

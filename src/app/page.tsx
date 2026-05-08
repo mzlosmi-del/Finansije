@@ -1,10 +1,8 @@
 import Link from "next/link";
-import { monthSummary, yearSummary } from "@/lib/calc";
+import { Kind } from "@prisma/client";
+import { getDashboardData } from "@/lib/calc";
 import { todayParts, monthLabel, shiftMonth } from "@/lib/dates";
 import { Money } from "@/components/MoneyText";
-import { prisma } from "@/lib/db";
-import { Kind } from "@prisma/client";
-import { monthRange } from "@/lib/dates";
 import { deleteTransactionAction } from "@/lib/actions";
 
 export const dynamic = "force-dynamic";
@@ -18,30 +16,19 @@ export default async function Dashboard({
   const year = Number(searchParams?.y ?? today.y);
   const monthIndex0 = Number(searchParams?.m ?? today.m);
 
-  const [m, y] = await Promise.all([
-    monthSummary(year, monthIndex0),
-    yearSummary(year),
-  ]);
+  const data = await getDashboardData(year, monthIndex0);
 
-  const { start, end } = monthRange(year, monthIndex0);
-  const recentTxns = await prisma.transaction.findMany({
-    where: { date: { gte: start, lt: end } },
-    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-    take: 10,
-    include: { user: true, category: true },
-  });
-
-  const currency = m.settings.currency;
-  const locale = m.settings.locale;
-  const monthlyTarget = m.settings.monthlySavingsTargetCents;
-  const monthlySaved = m.total.net;
+  const currency = data.settings.currency;
+  const locale = data.settings.locale;
+  const monthlyTarget = data.settings.monthlySavingsTargetCents;
+  const monthlySaved = data.month.total.net;
   const monthlyPct =
     monthlyTarget > 0
       ? Math.max(0, Math.min(100, Math.round((monthlySaved / monthlyTarget) * 100)))
       : 0;
 
-  const yearlyTarget = m.settings.yearlySavingsTargetCents;
-  const yearlySaved = y.total.net;
+  const yearlyTarget = data.settings.yearlySavingsTargetCents;
+  const yearlySaved = data.year.total.net;
   const yearlyPct =
     yearlyTarget > 0
       ? Math.max(0, Math.min(100, Math.round((yearlySaved / yearlyTarget) * 100)))
@@ -49,6 +36,7 @@ export default async function Dashboard({
 
   const prev = shiftMonth(year, monthIndex0, -1);
   const next = shiftMonth(year, monthIndex0, 1);
+  const recentTxns = data.recentTxns;
 
   return (
     <div className="space-y-4 pt-2">
@@ -81,11 +69,11 @@ export default async function Dashboard({
             <div className="label">Saldo ovog meseca</div>
             <div className="text-3xl font-bold tabular-nums">
               <Money
-                cents={m.total.net}
+                cents={data.month.total.net}
                 currency={currency}
                 locale={locale}
                 signed
-                className={m.total.net >= 0 ? "text-good" : "text-bad"}
+                className={data.month.total.net >= 0 ? "text-good" : "text-bad"}
               />
             </div>
           </div>
@@ -93,7 +81,7 @@ export default async function Dashboard({
             <div className="label">Prihodi</div>
             <div className="text-good font-semibold tabular-nums">
               <Money
-                cents={m.total.revenue}
+                cents={data.month.total.revenue}
                 currency={currency}
                 locale={locale}
               />
@@ -101,7 +89,7 @@ export default async function Dashboard({
             <div className="label mt-1">Rashodi</div>
             <div className="text-bad font-semibold tabular-nums">
               <Money
-                cents={m.total.expense}
+                cents={data.month.total.expense}
                 currency={currency}
                 locale={locale}
               />
@@ -143,7 +131,7 @@ export default async function Dashboard({
       <section className="card">
         <div className="label mb-3">Po osobi</div>
         <div className="grid grid-cols-1 gap-3">
-          {m.perUser.map((p) => (
+          {data.month.perUser.map((p) => (
             <div
               key={p.user.id}
               className="rounded-xl bg-black/[0.035] border border-line p-3 flex items-center justify-between"
@@ -179,11 +167,11 @@ export default async function Dashboard({
             <div className="label">Godina {year} · Saldo</div>
             <div className="text-xl font-semibold tabular-nums">
               <Money
-                cents={y.total.net}
+                cents={data.year.total.net}
                 currency={currency}
                 locale={locale}
                 signed
-                className={y.total.net >= 0 ? "text-good" : "text-bad"}
+                className={data.year.total.net >= 0 ? "text-good" : "text-bad"}
               />
             </div>
           </div>
