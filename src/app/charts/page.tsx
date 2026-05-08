@@ -1,16 +1,29 @@
 import { getMonthlyChartData } from "@/lib/charts";
 import { MonthlyChart } from "@/components/MonthlyChart";
 import { Money } from "@/components/MoneyText";
+import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export default async function ChartsPage({
   searchParams,
 }: {
-  searchParams?: { range?: string };
+  searchParams?: { range?: string; user?: string };
 }) {
   const range = clampRange(Number(searchParams?.range ?? 12));
-  const data = await getMonthlyChartData(range);
+  const users = await prisma.user.findMany({
+    orderBy: { createdAt: "asc" },
+  });
+  const requestedUser = searchParams?.user ?? "all";
+  const activeUserId =
+    requestedUser !== "all" && users.some((u) => u.id === requestedUser)
+      ? requestedUser
+      : null;
+  const activeUser = activeUserId
+    ? users.find((u) => u.id === activeUserId) ?? null
+    : null;
+
+  const data = await getMonthlyChartData(range, activeUserId ?? undefined);
 
   const totals = data.points.reduce(
     (a, p) => ({
@@ -22,33 +35,79 @@ export default async function ChartsPage({
   const net = totals.revenue - totals.expense;
   const avgNet = data.points.length > 0 ? Math.round(net / data.points.length) : 0;
 
+  // Pro-rate the household savings target when filtered to one person.
+  const target =
+    activeUserId && users.length > 0
+      ? Math.round(data.monthlyTarget / users.length)
+      : data.monthlyTarget;
+
   const ranges = [3, 6, 12, 24];
+  const buildHref = (next: { range?: number; user?: string }) => {
+    const r = next.range ?? range;
+    const u = next.user ?? requestedUser;
+    return `/charts?range=${r}${u && u !== "all" ? `&user=${u}` : ""}`;
+  };
 
   return (
     <div className="space-y-4 pt-2">
       <div className="card">
-        <div className="flex items-center justify-between gap-2">
-          <div className="label">Pregled · poslednjih {range} meseci</div>
-        </div>
+        <div className="label">Pregled · poslednjih {range} meseci</div>
         <div className="mt-1 flex flex-wrap gap-2">
           {ranges.map((r) => (
             <a
               key={r}
-              href={`/charts?range=${r}`}
+              href={buildHref({ range: r })}
               className={`chip ${r === range ? "chip-active" : ""}`}
             >
               {r}m
             </a>
           ))}
         </div>
+
+        <div className="mt-3 label">Osoba</div>
+        <div className="mt-1 flex flex-wrap gap-2">
+          <a
+            href={buildHref({ user: "all" })}
+            className={`chip ${activeUserId === null ? "chip-active" : ""}`}
+          >
+            Svi
+          </a>
+          {users.map((u) => {
+            const active = u.id === activeUserId;
+            return (
+              <a
+                key={u.id}
+                href={buildHref({ user: u.id })}
+                className="chip"
+                style={
+                  active
+                    ? { background: u.color, color: "white" }
+                    : { background: `${u.color}1A`, color: "#0f172a" }
+                }
+              >
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{ background: active ? "rgba(255,255,255,0.9)" : u.color }}
+                />
+                {u.name}
+              </a>
+            );
+          })}
+        </div>
+
         <div className="mt-4 -mx-1">
           <MonthlyChart
             points={data.points}
-            target={data.monthlyTarget}
+            target={target}
             currency={data.currency}
             locale={data.locale}
           />
         </div>
+        {activeUser && (
+          <div className="mt-2 text-xs text-muted">
+            Cilj prikazan kao udeo po osobi (ukupan cilj ÷ broj članova).
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-2">

@@ -23,7 +23,7 @@ export function parseAmountToCents(input: string): number {
 export function formatMoney(
   cents: number,
   currency = "EUR",
-  locale = "de-DE"
+  locale = "sr-RS"
 ): string {
   return new Intl.NumberFormat(locale, {
     style: "currency",
@@ -32,7 +32,7 @@ export function formatMoney(
   }).format(cents / 100);
 }
 
-export function formatShort(cents: number, locale = "de-DE"): string {
+export function formatShort(cents: number, locale = "sr-RS"): string {
   return new Intl.NumberFormat(locale, {
     maximumFractionDigits: 0,
   }).format(Math.round(cents / 100));

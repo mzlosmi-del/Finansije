@@ -3,7 +3,7 @@ import { formatMoney } from "@/lib/money";
 export function Money({
   cents,
   currency = "EUR",
-  locale = "de-DE",
+  locale = "sr-RS",
   signed = false,
   className = "",
 }: {

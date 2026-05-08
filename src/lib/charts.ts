@@ -10,7 +10,10 @@ export type MonthlyPoint = {
   expense: number;
 };
 
-export async function getMonthlyChartData(monthsBack: number) {
+export async function getMonthlyChartData(
+  monthsBack: number,
+  userId?: string
+) {
   const today = new Date();
   const months: { year: number; monthIndex0: number }[] = [];
   for (let i = monthsBack - 1; i >= 0; i--) {
@@ -27,10 +30,14 @@ export async function getMonthlyChartData(monthsBack: number) {
   const [settings, recurring, txns] = await Promise.all([
     prisma.settings.findUnique({ where: { id: 1 } }),
     prisma.recurring.findMany({
+      where: userId ? { userId } : undefined,
       select: { kind: true, period: true, amountCents: true },
     }),
     prisma.transaction.findMany({
-      where: { date: { gte: first.start, lt: last.end } },
+      where: {
+        date: { gte: first.start, lt: last.end },
+        ...(userId ? { userId } : {}),
+      },
       select: { date: true, kind: true, amountCents: true },
     }),
   ]);

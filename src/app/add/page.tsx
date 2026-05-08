@@ -35,7 +35,7 @@ export default async function AddPage({
         revenueCategories={revenueCats}
         initialKind={initialKind}
         currency={settings?.currency ?? "EUR"}
-        locale={settings?.locale ?? "de-DE"}
+        locale={settings?.locale ?? "sr-RS"}
       />
     </div>
   );

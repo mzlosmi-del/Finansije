@@ -92,7 +92,7 @@ export async function updateSettingsAction(formData: FormData) {
   const monthly = parseAmountToCents(String(formData.get("monthly") ?? ""));
   const yearly = parseAmountToCents(String(formData.get("yearly") ?? ""));
   const currency = String(formData.get("currency") ?? "EUR");
-  const locale = String(formData.get("locale") ?? "de-DE");
+  const locale = String(formData.get("locale") ?? "sr-RS");
   await prisma.settings.upsert({
     where: { id: 1 },
     update: {

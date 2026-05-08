@@ -15,7 +15,7 @@ export function todayParts() {
   return { y: d.getFullYear(), m: d.getMonth(), day: d.getDate() };
 }
 
-export function monthLabel(year: number, monthIndex0: number, locale = "de-DE") {
+export function monthLabel(year: number, monthIndex0: number, locale = "sr-RS") {
   return new Date(year, monthIndex0, 1).toLocaleString(locale, {
     month: "long",
     year: "numeric",
