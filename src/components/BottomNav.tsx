@@ -5,10 +5,11 @@ import { usePathname } from "next/navigation";
 
 const items = [
   { href: "/", label: "Početna", icon: "🏠" },
-  { href: "/recurring", label: "Redovno", icon: "🔁" },
+  { href: "/charts", label: "Grafici", icon: "📊" },
   { href: "/add", label: "Dodaj", icon: "＋", primary: true },
+  { href: "/recurring", label: "Redovno", icon: "🔁" },
   { href: "/history", label: "Istorija", icon: "📜" },
-  { href: "/settings", label: "Podešavanja", icon: "⚙️" },
+  { href: "/settings", label: "Opcije", icon: "⚙️" },
 ];
 
 export function BottomNav() {
@@ -16,7 +17,7 @@ export function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 mx-auto max-w-md">
       <div className="m-3 rounded-2xl bg-card/95 backdrop-blur shadow-pop border border-line">
-        <ul className="grid grid-cols-5">
+        <ul className="grid grid-cols-6">
           {items.map((it) => {
             const active = pathname === it.href;
             if (it.primary) {
@@ -36,12 +37,12 @@ export function BottomNav() {
               <li key={it.href}>
                 <Link
                   href={it.href}
-                  className={`flex flex-col items-center gap-0.5 py-3 text-[11px] ${
+                  className={`flex flex-col items-center gap-0.5 py-3 text-[10px] ${
                     active ? "text-ink font-medium" : "text-muted"
                   }`}
                 >
-                  <span className="text-lg leading-none">{it.icon}</span>
-                  <span>{it.label}</span>
+                  <span className="text-base leading-none">{it.icon}</span>
+                  <span className="truncate max-w-full px-0.5">{it.label}</span>
                 </Link>
               </li>
             );
