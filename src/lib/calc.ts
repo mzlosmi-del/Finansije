@@ -10,6 +10,10 @@ import {
 export type DashboardUserRow = {
   user: { id: string; name: string; color: string };
   expense: number;
+  /** Recurring portion of the expense (projected from the Recurring table). */
+  recurringExpense: number;
+  /** One-off, non-recurring expense entered as transactions this period. */
+  oneOffExpense: number;
   revenue: number;
   net: number;
 };
@@ -61,10 +65,16 @@ export async function getDashboardData(year: number, monthIndex0: number) {
     }),
   ]);
 
-  type Acc = Map<string, { expense: number; revenue: number }>;
+  type Bucket = {
+    recurringExpense: number;
+    oneOffExpense: number;
+    revenue: number;
+  };
+  type Acc = Map<string, Bucket>;
   const newAcc = (): Acc => {
     const m: Acc = new Map();
-    for (const u of users) m.set(u.id, { expense: 0, revenue: 0 });
+    for (const u of users)
+      m.set(u.id, { recurringExpense: 0, oneOffExpense: 0, revenue: 0 });
     return m;
   };
 
@@ -95,8 +105,8 @@ export async function getDashboardData(year: number, monthIndex0: number) {
     const yb = yearAcc.get(r.userId);
     if (!mb || !yb) continue;
     if (r.kind === Kind.EXPENSE) {
-      mb.expense += monthlyShare;
-      yb.expense += yearlyShare;
+      mb.recurringExpense += monthlyShare;
+      yb.recurringExpense += yearlyShare;
     } else {
       mb.revenue += monthlyShare;
       yb.revenue += yearlyShare;
@@ -108,7 +118,7 @@ export async function getDashboardData(year: number, monthIndex0: number) {
     const b = monthAcc.get(row.userId);
     if (!b) continue;
     const v = row._sum.amountCents ?? 0;
-    if (row.kind === Kind.EXPENSE) b.expense += v;
+    if (row.kind === Kind.EXPENSE) b.oneOffExpense += v;
     else b.revenue += v;
   }
   // One-off transactions for the full year.
@@ -116,37 +126,42 @@ export async function getDashboardData(year: number, monthIndex0: number) {
     const b = yearAcc.get(row.userId);
     if (!b) continue;
     const v = row._sum.amountCents ?? 0;
-    if (row.kind === Kind.EXPENSE) b.expense += v;
+    if (row.kind === Kind.EXPENSE) b.oneOffExpense += v;
     else b.revenue += v;
   }
 
-  const monthPerUser: DashboardUserRow[] = users.map((u) => {
-    const b = monthAcc.get(u.id) ?? { expense: 0, revenue: 0 };
+  const toRow = (b: Bucket | undefined, u: (typeof users)[number]): DashboardUserRow => {
+    const bucket = b ?? { recurringExpense: 0, oneOffExpense: 0, revenue: 0 };
+    const recurringExpense = Math.round(bucket.recurringExpense);
+    const oneOffExpense = Math.round(bucket.oneOffExpense);
+    const revenue = Math.round(bucket.revenue);
+    const expense = recurringExpense + oneOffExpense;
     return {
       user: u,
-      expense: Math.round(b.expense),
-      revenue: Math.round(b.revenue),
-      net: Math.round(b.revenue - b.expense),
+      expense,
+      recurringExpense,
+      oneOffExpense,
+      revenue,
+      net: revenue - expense,
     };
-  });
-  const yearPerUser: DashboardUserRow[] = users.map((u) => {
-    const b = yearAcc.get(u.id) ?? { expense: 0, revenue: 0 };
-    return {
-      user: u,
-      expense: Math.round(b.expense),
-      revenue: Math.round(b.revenue),
-      net: Math.round(b.revenue - b.expense),
-    };
-  });
+  };
+  const monthPerUser: DashboardUserRow[] = users.map((u) =>
+    toRow(monthAcc.get(u.id), u)
+  );
+  const yearPerUser: DashboardUserRow[] = users.map((u) =>
+    toRow(yearAcc.get(u.id), u)
+  );
 
   const sumTotals = (rows: DashboardUserRow[]) =>
     rows.reduce(
       (a, p) => ({
         expense: a.expense + p.expense,
+        recurringExpense: a.recurringExpense + p.recurringExpense,
+        oneOffExpense: a.oneOffExpense + p.oneOffExpense,
         revenue: a.revenue + p.revenue,
         net: a.net + p.net,
       }),
-      { expense: 0, revenue: 0, net: 0 }
+      { expense: 0, recurringExpense: 0, oneOffExpense: 0, revenue: 0, net: 0 }
     );
 
   return {

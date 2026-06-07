@@ -27,14 +27,16 @@ export default async function Dashboard({
       ? Math.max(0, Math.min(100, Math.round((monthlySaved / monthlyTarget) * 100)))
       : 0;
 
-  // Monthly budget: the share of revenue left over after the planned savings
-  // target and the actual expenses. (revenue − savings target − expenses) / revenue.
+  // Monthly budget = revenue − savings target − recurring expenses. This is
+  // the money available for everyday (one-off) spending. The percentage shows
+  // how much of that budget the one-off expenses have used up.
   const monthlyRevenue = data.month.total.revenue;
-  const monthlyExpense = data.month.total.expense;
-  const monthlyBudgetLeft = monthlyRevenue - monthlyTarget - monthlyExpense;
-  const monthlyBudgetPct =
-    monthlyRevenue > 0
-      ? Math.round((monthlyBudgetLeft / monthlyRevenue) * 100)
+  const monthlyRecurringExpense = data.month.total.recurringExpense;
+  const monthlyOneOffExpense = data.month.total.oneOffExpense;
+  const monthlyBudget = monthlyRevenue - monthlyTarget - monthlyRecurringExpense;
+  const monthlyBudgetUsedPct =
+    monthlyBudget > 0
+      ? Math.round((monthlyOneOffExpense / monthlyBudget) * 100)
       : null;
 
   const yearlyTarget = data.settings.yearlySavingsTargetCents;
@@ -96,10 +98,18 @@ export default async function Dashboard({
                 locale={locale}
               />
             </div>
-            <div className="label mt-1">Rashodi</div>
+            <div className="label mt-1">Rashodi (mesečni)</div>
             <div className="text-bad font-semibold tabular-nums">
               <Money
-                cents={data.month.total.expense}
+                cents={monthlyOneOffExpense}
+                currency={currency}
+                locale={locale}
+              />
+            </div>
+            <div className="label mt-1">Rashodi (redovni)</div>
+            <div className="text-bad/80 font-semibold tabular-nums">
+              <Money
+                cents={monthlyRecurringExpense}
                 currency={currency}
                 locale={locale}
               />
@@ -107,18 +117,35 @@ export default async function Dashboard({
           </div>
         </div>
 
-        {monthlyBudgetPct !== null && (
-          <div className="mt-4 flex items-baseline justify-between border-t border-line pt-3">
-            <span className="text-muted text-sm">
-              Budžet (preostalo od prihoda)
-            </span>
-            <span
-              className={`tabular-nums font-semibold ${
-                monthlyBudgetPct >= 0 ? "text-good" : "text-bad"
-              }`}
-            >
-              {monthlyBudgetPct}%
-            </span>
+        {monthlyBudgetUsedPct !== null && (
+          <div className="mt-4 border-t border-line pt-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted">
+                Budžet{" "}
+                <Money
+                  cents={monthlyBudget}
+                  currency={currency}
+                  locale={locale}
+                />
+              </span>
+              <span
+                className={`tabular-nums font-semibold ${
+                  monthlyBudgetUsedPct > 100 ? "text-bad" : "text-good"
+                }`}
+              >
+                {monthlyBudgetUsedPct}% iskorišćeno
+              </span>
+            </div>
+            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/[0.06]">
+              <div
+                className={`h-full ${
+                  monthlyBudgetUsedPct > 100 ? "bg-bad" : "bg-good"
+                }`}
+                style={{
+                  width: `${Math.max(0, Math.min(100, monthlyBudgetUsedPct))}%`,
+                }}
+              />
+            </div>
           </div>
         )}
 
