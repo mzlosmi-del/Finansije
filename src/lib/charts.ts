@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { Kind, Period } from "@prisma/client";
-import { monthRange } from "@/lib/dates";
+import { monthRange, monthHasStarted } from "@/lib/dates";
 
 export type MonthlyPoint = {
   year: number;
@@ -67,14 +67,19 @@ export async function getMonthlyChartData(
     const expTx = inMonth
       .filter((t) => t.kind === Kind.EXPENSE)
       .reduce((s, t) => s + t.amountCents, 0);
+    // Only project recurring amounts onto months that have already started;
+    // future months show only the entries that have actually happened.
+    const started = monthHasStarted(year, monthIndex0);
+    const recRevenue = started ? monthlyRecRevenue : 0;
+    const recExpense = started ? monthlyRecExpense : 0;
     return {
       year,
       monthIndex0,
       label: new Date(year, monthIndex0, 1)
         .toLocaleDateString(locale, { month: "short" })
         .replace(".", ""),
-      revenue: Math.round(monthlyRecRevenue + revTx),
-      expense: Math.round(monthlyRecExpense + expTx),
+      revenue: Math.round(recRevenue + revTx),
+      expense: Math.round(recExpense + expTx),
     };
   });
 

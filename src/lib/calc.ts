@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/db";
 import { Kind, Period } from "@prisma/client";
-import { monthRange, yearRange } from "@/lib/dates";
+import {
+  monthRange,
+  yearRange,
+  elapsedMonthsInYear,
+  monthHasStarted,
+} from "@/lib/dates";
 
 export type DashboardUserRow = {
   user: { id: string; name: string; color: string };
@@ -66,12 +71,26 @@ export async function getDashboardData(year: number, monthIndex0: number) {
   const monthAcc = newAcc();
   const yearAcc = newAcc();
 
+  // For the year total, only count recurring entries for months that have
+  // already happened (elapsed), so future recurring revenue/expenses are not
+  // included. A MONTHLY recurring accrues once per elapsed month; a YEARLY
+  // recurring accrues proportionally as the year elapses.
+  const elapsed = elapsedMonthsInYear(year);
+  // The selected month only gets its recurring projection if it has started;
+  // future months show nothing recurring (only entries that have happened).
+  const selectedMonthStarted = monthHasStarted(year, monthIndex0);
+
   // Recurring entries: project monthly and yearly contributions.
   for (const r of recurring) {
-    const monthlyShare =
-      r.period === Period.MONTHLY ? r.amountCents : r.amountCents / 12;
+    const monthlyShare = !selectedMonthStarted
+      ? 0
+      : r.period === Period.MONTHLY
+      ? r.amountCents
+      : r.amountCents / 12;
     const yearlyShare =
-      r.period === Period.YEARLY ? r.amountCents : r.amountCents * 12;
+      r.period === Period.YEARLY
+        ? (r.amountCents * elapsed) / 12
+        : r.amountCents * elapsed;
     const mb = monthAcc.get(r.userId);
     const yb = yearAcc.get(r.userId);
     if (!mb || !yb) continue;

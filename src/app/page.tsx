@@ -27,6 +27,16 @@ export default async function Dashboard({
       ? Math.max(0, Math.min(100, Math.round((monthlySaved / monthlyTarget) * 100)))
       : 0;
 
+  // Monthly budget: the share of revenue left over after the planned savings
+  // target and the actual expenses. (revenue − savings target − expenses) / revenue.
+  const monthlyRevenue = data.month.total.revenue;
+  const monthlyExpense = data.month.total.expense;
+  const monthlyBudgetLeft = monthlyRevenue - monthlyTarget - monthlyExpense;
+  const monthlyBudgetPct =
+    monthlyRevenue > 0
+      ? Math.round((monthlyBudgetLeft / monthlyRevenue) * 100)
+      : null;
+
   const yearlyTarget = data.settings.yearlySavingsTargetCents;
   const yearlySaved = data.year.total.net;
   const yearlyPct =
@@ -96,6 +106,21 @@ export default async function Dashboard({
             </div>
           </div>
         </div>
+
+        {monthlyBudgetPct !== null && (
+          <div className="mt-4 flex items-baseline justify-between border-t border-line pt-3">
+            <span className="text-muted text-sm">
+              Budžet (preostalo od prihoda)
+            </span>
+            <span
+              className={`tabular-nums font-semibold ${
+                monthlyBudgetPct >= 0 ? "text-good" : "text-bad"
+              }`}
+            >
+              {monthlyBudgetPct}%
+            </span>
+          </div>
+        )}
 
         {monthlyTarget > 0 && (
           <div className="mt-4">
