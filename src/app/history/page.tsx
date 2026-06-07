@@ -68,7 +68,7 @@ export default async function HistoryPage() {
                   <button
                     type="submit"
                     aria-label="Obriši"
-                    className="text-muted hover:text-bad px-1"
+                    className="tap text-muted hover:text-bad"
                   >
                     ✕
                   </button>

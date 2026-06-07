@@ -126,7 +126,7 @@ export async function renameUserAction(formData: FormData) {
 
 export async function addUserAction(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
-  const color = String(formData.get("color") ?? "#7c5cff");
+  const color = String(formData.get("color") ?? "#2563eb");
   if (!name) return;
   await prisma.user.create({ data: { name, color } });
   revalidatePath("/", "layout");
@@ -150,7 +150,7 @@ export async function addCategoryAction(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const kind = asKind(formData.get("kind"));
   const icon = String(formData.get("icon") ?? "•").trim() || "•";
-  const color = String(formData.get("color") ?? "#7c5cff");
+  const color = String(formData.get("color") ?? "#2563eb");
   if (!name) return;
   await prisma.category.create({ data: { name, kind, icon, color } });
   revalidatePath("/settings");

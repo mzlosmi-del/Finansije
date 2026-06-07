@@ -1,12 +1,14 @@
 import type { MonthlyPoint } from "@/lib/charts";
 import { formatMoney } from "@/lib/money";
 
-const COLOR_REVENUE = "#16a34a";
-const COLOR_EXPENSE = "#dc2626";
-const COLOR_TARGET = "#7c5cff";
-const COLOR_GRID = "#e5e7eb";
-const COLOR_AXIS = "#94a3b8";
-const COLOR_INK = "#0f172a";
+// Read from the theme CSS variables (defined in globals.css) so chart colors
+// always match the rest of the app and never drift from tailwind.config.ts.
+const COLOR_REVENUE = "var(--c-good)";
+const COLOR_EXPENSE = "var(--c-bad)";
+const COLOR_TARGET = "var(--c-accent)";
+const COLOR_GRID = "var(--c-line)";
+const COLOR_AXIS = "var(--c-axis)";
+const COLOR_INK = "var(--c-ink)";
 
 export function MonthlyChart({
   points,

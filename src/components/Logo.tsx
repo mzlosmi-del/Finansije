@@ -16,9 +16,9 @@ export function LogoMark({
     >
       <defs>
         <linearGradient id="grfHeaderBg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#7c5cff" />
-          <stop offset="55%" stopColor="#5b8cff" />
-          <stop offset="100%" stopColor="#22c55e" />
+          <stop offset="0%" stopColor="#2563eb" />
+          <stop offset="55%" stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#15803d" />
         </linearGradient>
       </defs>
       <rect width="64" height="64" rx="14" fill="url(#grfHeaderBg)" />
@@ -38,7 +38,7 @@ export function LogoMark({
         <line x1="32" y1="46" x2="52" y2="26" strokeWidth="6" />
       </g>
       <circle cx="52" cy="22" r="4.5" fill="#fff" />
-      <circle cx="52" cy="22" r="2" fill="#22c55e" />
+      <circle cx="52" cy="22" r="2" fill="#15803d" />
     </svg>
   );
 }

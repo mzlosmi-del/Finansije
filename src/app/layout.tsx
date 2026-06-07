@@ -1,5 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
 import { BottomNav } from "@/components/BottomNav";
 import { PersonSwitcher } from "@/components/PersonSwitcher";
 import { BrandLockup } from "@/components/Logo";
@@ -26,7 +33,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f6f7fb",
+  themeColor: "#f8fafc",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -40,8 +47,8 @@ export default async function RootLayout({
 }) {
   const { user, users } = await getCurrentPerson();
   return (
-    <html lang="sr-Latn">
-      <body>
+    <html lang="sr-Latn" className={inter.variable}>
+      <body className="font-sans antialiased">
         <div className="mx-auto max-w-md min-h-dvh flex flex-col">
           <header className="sticky top-0 z-20 bg-bg/85 backdrop-blur px-4 pt-4 pb-3 border-b border-line">
             <div className="flex items-center justify-between gap-3">

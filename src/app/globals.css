@@ -4,13 +4,27 @@
 
 :root {
   color-scheme: light;
+
+  /* Theme colors mirrored as CSS variables so non-Tailwind consumers
+     (e.g. the SVG chart) stay in sync with tailwind.config.ts. */
+  --c-bg: #f8fafc;
+  --c-card: #ffffff;
+  --c-ink: #0f172a;
+  --c-muted: #64748b;
+  --c-line: #e2e8f0;
+  --c-accent: #2563eb;
+  --c-good: #15803d;
+  --c-bad: #dc2626;
+  --c-warn: #b45309;
+  --c-axis: #94a3b8;
 }
 
 html,
 body {
-  background: #f6f7fb;
-  color: #0f172a;
+  background: var(--c-bg);
+  color: var(--c-ink);
   -webkit-tap-highlight-color: transparent;
+  font-feature-settings: "tnum" 1, "cv11" 1;
 }
 
 * {
@@ -31,22 +45,22 @@ input[type="number"] {
     @apply bg-card rounded-2xl p-4 shadow-soft border border-line;
   }
   .btn {
-    @apply inline-flex items-center justify-center rounded-xl px-4 py-3 font-medium transition active:scale-[.98];
+    @apply inline-flex min-h-12 items-center justify-center rounded-xl px-4 py-3.5 font-medium transition active:scale-[.98];
   }
   .btn-primary {
-    @apply btn bg-accent text-white shadow-soft;
+    @apply btn bg-accent text-white shadow-soft hover:bg-accent/90;
   }
   .btn-ghost {
-    @apply btn bg-black/5 text-ink hover:bg-black/10;
+    @apply btn bg-ink/[0.05] text-ink hover:bg-ink/[0.09];
   }
   .btn-danger {
-    @apply btn bg-bad/10 text-bad;
+    @apply btn bg-bad/10 text-bad hover:bg-bad/[0.16];
   }
   .input {
-    @apply w-full rounded-xl bg-white border border-line px-4 py-3 text-ink placeholder:text-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/20;
+    @apply min-h-12 w-full rounded-xl bg-white border border-line px-4 py-3 text-ink placeholder:text-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/25;
   }
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm bg-black/5 text-ink;
+    @apply inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm bg-ink/[0.05] text-ink;
   }
   .chip-active {
     @apply bg-accent text-white;
@@ -55,6 +69,10 @@ input[type="number"] {
     @apply text-xs uppercase tracking-wider text-muted;
   }
   .surface {
-    @apply bg-black/[0.035];
+    @apply bg-ink/[0.035];
+  }
+  /* Comfortable hit area for icon-only controls (delete ✕, close). */
+  .tap {
+    @apply inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg transition active:scale-95;
   }
 }

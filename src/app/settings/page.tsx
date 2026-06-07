@@ -136,7 +136,7 @@ export default async function SettingsPage() {
                         ? `Član ima ${used} unosa i ne može se obrisati`
                         : "Obriši člana"
                     }
-                    className="text-xs text-muted hover:text-bad disabled:opacity-40 disabled:hover:text-muted"
+                    className="inline-flex min-h-11 items-center px-2 text-xs text-muted hover:text-bad disabled:opacity-40 disabled:hover:text-muted"
                   >
                     {used > 0
                       ? `Ne može se obrisati (${used} unosa)`
@@ -155,7 +155,7 @@ export default async function SettingsPage() {
           <input
             type="color"
             name="color"
-            defaultValue="#7c5cff"
+            defaultValue="#2563eb"
             className="h-full rounded-xl bg-transparent border border-line"
           />
           <input
@@ -214,7 +214,7 @@ function CategorySection({
               <button
                 type="submit"
                 aria-label="Obriši"
-                className="text-muted hover:text-bad px-1"
+                className="tap text-muted hover:text-bad"
               >
                 ✕
               </button>
@@ -233,7 +233,7 @@ function CategorySection({
         <input
           type="color"
           name="color"
-          defaultValue="#7c5cff"
+          defaultValue="#2563eb"
           className="h-full rounded-xl bg-transparent border border-line"
         />
         <input

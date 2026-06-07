@@ -122,7 +122,7 @@ export function AddTransactionForm({
                 style={
                   active
                     ? { background: c.color, color: "white" }
-                    : { background: `${c.color}1A`, color: "#0f172a" }
+                    : { background: `${c.color}1A`, color: "var(--c-ink)" }
                 }
               >
                 <span>{c.icon}</span>

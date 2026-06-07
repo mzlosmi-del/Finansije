@@ -86,7 +86,7 @@ export function RecurringForm({
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="text-muted text-sm"
+          className="tap px-3 text-muted text-sm hover:text-ink"
         >
           Zatvori
         </button>
@@ -169,7 +169,7 @@ export function RecurringForm({
                 style={
                   active
                     ? { background: c.color, color: "white" }
-                    : { background: `${c.color}1A`, color: "#0f172a" }
+                    : { background: `${c.color}1A`, color: "var(--c-ink)" }
                 }
               >
                 <span>{c.icon}</span>

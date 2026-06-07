@@ -37,11 +37,11 @@ export function BottomNav() {
               <li key={it.href}>
                 <Link
                   href={it.href}
-                  className={`flex flex-col items-center gap-0.5 py-3 text-[10px] ${
+                  className={`flex min-h-12 flex-col items-center justify-center gap-0.5 py-3.5 text-[11px] ${
                     active ? "text-ink font-medium" : "text-muted"
                   }`}
                 >
-                  <span className="text-base leading-none">{it.icon}</span>
+                  <span className="text-lg leading-none">{it.icon}</span>
                   <span className="truncate max-w-full px-0.5">{it.label}</span>
                 </Link>
               </li>

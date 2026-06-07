@@ -82,7 +82,7 @@ export default async function ChartsPage({
                 style={
                   active
                     ? { background: u.color, color: "white" }
-                    : { background: `${u.color}1A`, color: "#0f172a" }
+                    : { background: `${u.color}1A`, color: "var(--c-ink)" }
                 }
               >
                 <span
