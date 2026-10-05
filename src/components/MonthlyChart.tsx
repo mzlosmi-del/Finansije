@@ -5,7 +5,7 @@ import { formatMoney } from "@/lib/money";
 // always match the rest of the app and never drift from tailwind.config.ts.
 const COLOR_REVENUE = "var(--c-good)";
 const COLOR_EXPENSE = "var(--c-bad)";
-const COLOR_TARGET = "var(--c-accent)";
+const COLOR_LIMIT = "var(--c-accent)";
 const COLOR_GRID = "var(--c-line)";
 const COLOR_AXIS = "var(--c-axis)";
 const COLOR_INK = "var(--c-ink)";
@@ -30,8 +30,15 @@ export function MonthlyChart({
   const innerW = W - padL - padR;
   const innerH = H - padT - padB;
 
+  // Expense limit per month: the most that can be spent (recurring + one-off)
+  // while still saving the target, i.e. revenue − savings target. Months with
+  // no revenue yet (e.g. future months) get no limit.
+  const limits = points.map((p) =>
+    target > 0 && p.revenue > 0 ? Math.max(0, p.revenue - target) : null
+  );
+  const hasLimit = limits.some((l) => l !== null);
+
   const rawMax = Math.max(
-    target,
     ...points.flatMap((p) => [p.revenue, p.expense]),
     1
   );
@@ -120,36 +127,34 @@ export function MonthlyChart({
           );
         })}
 
-        {/* Budget / target line */}
-        {target > 0 && (
-          <g>
+        {/* Expense limit (revenue − savings target), one step per month */}
+        {limits.map((l, i) => {
+          if (l === null) return null;
+          const y = yToPx(l);
+          const x1 = padL + i * groupW + 2;
+          const x2 = padL + (i + 1) * groupW - 2;
+          return (
             <line
-              x1={padL}
-              x2={W - padR}
-              y1={yToPx(target)}
-              y2={yToPx(target)}
-              stroke={COLOR_TARGET}
+              key={`limit-${i}`}
+              x1={x1}
+              x2={x2}
+              y1={y}
+              y2={y}
+              stroke={COLOR_LIMIT}
               strokeWidth={2}
-              strokeDasharray="6 4"
-            />
-            <text
-              x={W - padR - 4}
-              y={yToPx(target) - 4}
-              textAnchor="end"
-              fontSize="10"
-              fontWeight="600"
-              fill={COLOR_TARGET}
+              strokeDasharray="5 3"
+              strokeLinecap="round"
             >
-              Cilj {fmtCompact(target)}
-            </text>
-          </g>
-        )}
+              <title>Limit rashoda {fmtCompact(l)}</title>
+            </line>
+          );
+        })}
       </svg>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
         <LegendDot color={COLOR_REVENUE} label="Prihodi" />
         <LegendDot color={COLOR_EXPENSE} label="Rashodi" />
-        {target > 0 && (
+        {hasLimit && (
           <span className="inline-flex items-center gap-2">
             <svg width="22" height="6" aria-hidden>
               <line
@@ -157,12 +162,12 @@ export function MonthlyChart({
                 y1="3"
                 x2="22"
                 y2="3"
-                stroke={COLOR_TARGET}
+                stroke={COLOR_LIMIT}
                 strokeWidth="2"
                 strokeDasharray="4 3"
               />
             </svg>
-            <span className="text-muted">Cilj štednje</span>
+            <span className="text-muted">Limit rashoda (za cilj štednje)</span>
           </span>
         )}
       </div>

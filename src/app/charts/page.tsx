@@ -105,7 +105,7 @@ export default async function ChartsPage({
         </div>
         {activeUser && (
           <div className="mt-2 text-xs text-muted">
-            Cilj prikazan kao udeo po osobi (ukupan cilj ÷ broj članova).
+            Limit rashoda računat sa udelom cilja po osobi (ukupan cilj ÷ broj članova).
           </div>
         )}
       </div>
