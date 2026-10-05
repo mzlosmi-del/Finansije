@@ -3,8 +3,8 @@ import { formatMoney } from "@/lib/money";
 
 // Read from the theme CSS variables (defined in globals.css) so chart colors
 // always match the rest of the app and never drift from tailwind.config.ts.
-const COLOR_REVENUE = "var(--c-good)";
-const COLOR_EXPENSE = "var(--c-bad)";
+const COLOR_REVENUE = "var(--c-chart-revenue)";
+const COLOR_EXPENSE = "var(--c-chart-expense)";
 const COLOR_LIMIT = "var(--c-accent)";
 const COLOR_GRID = "var(--c-line)";
 const COLOR_AXIS = "var(--c-axis)";

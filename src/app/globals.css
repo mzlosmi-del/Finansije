@@ -17,6 +17,10 @@
   --c-bad: #dc2626;
   --c-warn: #b45309;
   --c-axis: #94a3b8;
+  /* Softer Google-style fills for chart bars (text keeps the darker
+     --c-good/--c-bad above for contrast). */
+  --c-chart-revenue: #34a853;
+  --c-chart-expense: #ea4335;
 }
 
 html,
