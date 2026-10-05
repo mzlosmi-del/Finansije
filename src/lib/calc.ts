@@ -5,6 +5,7 @@ import {
   yearRange,
   elapsedMonthsInYear,
   monthHasStarted,
+  recurringActiveInMonth,
 } from "@/lib/dates";
 
 export type DashboardUserRow = {
@@ -45,6 +46,8 @@ export async function getDashboardData(year: number, monthIndex0: number) {
         kind: true,
         period: true,
         amountCents: true,
+        startDate: true,
+        endDate: true,
       },
     }),
     prisma.transaction.groupBy({
@@ -82,9 +85,10 @@ export async function getDashboardData(year: number, monthIndex0: number) {
   const yearAcc = newAcc();
 
   // For the year total, only count recurring entries for months that have
-  // already happened (elapsed), so future recurring revenue/expenses are not
-  // included. A MONTHLY recurring accrues once per elapsed month; a YEARLY
-  // recurring accrues proportionally as the year elapses.
+  // already happened (elapsed) and fall within the entry's start/end dates,
+  // so future recurring revenue/expenses are not included. A MONTHLY
+  // recurring accrues once per active month; a YEARLY one accrues 1/12 per
+  // active month.
   const elapsed = elapsedMonthsInYear(year);
   // The selected month only gets its recurring projection if it has started;
   // future months show nothing recurring (only entries that have happened).
@@ -92,15 +96,17 @@ export async function getDashboardData(year: number, monthIndex0: number) {
 
   // Recurring entries: project monthly and yearly contributions.
   for (const r of recurring) {
-    const monthlyShare = !selectedMonthStarted
-      ? 0
-      : r.period === Period.MONTHLY
-      ? r.amountCents
-      : r.amountCents / 12;
-    const yearlyShare =
-      r.period === Period.YEARLY
-        ? (r.amountCents * elapsed) / 12
-        : r.amountCents * elapsed;
+    const perMonth =
+      r.period === Period.MONTHLY ? r.amountCents : r.amountCents / 12;
+    const monthlyShare =
+      selectedMonthStarted && recurringActiveInMonth(r, year, monthIndex0)
+        ? perMonth
+        : 0;
+    let activeMonths = 0;
+    for (let m = 0; m < elapsed; m++) {
+      if (recurringActiveInMonth(r, year, m)) activeMonths++;
+    }
+    const yearlyShare = perMonth * activeMonths;
     const mb = monthAcc.get(r.userId);
     const yb = yearAcc.get(r.userId);
     if (!mb || !yb) continue;

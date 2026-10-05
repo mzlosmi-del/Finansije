@@ -36,6 +36,35 @@ export function monthHasStarted(year: number, monthIndex0: number) {
   return target <= cur;
 }
 
+/**
+ * True if a recurring entry applies to the given month: it started before the
+ * month ends and has not ended before the month starts. A missing start or
+ * end date means unbounded on that side.
+ */
+export function recurringActiveInMonth(
+  r: { startDate: Date | null; endDate: Date | null },
+  year: number,
+  monthIndex0: number
+) {
+  const { start, end } = monthRange(year, monthIndex0);
+  if (r.startDate && r.startDate >= end) return false;
+  if (r.endDate && r.endDate < start) return false;
+  return true;
+}
+
+/** Parses a YYYY-MM-DD form value as a UTC date; empty or invalid -> null. */
+export function parseDateInput(v: FormDataEntryValue | null): Date | null {
+  const s = String(v ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  const d = new Date(`${s}T00:00:00Z`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Formats a stored date as YYYY-MM-DD for a date input. */
+export function toDateInput(d: Date | null | undefined) {
+  return d ? d.toISOString().slice(0, 10) : "";
+}
+
 export function monthLabel(year: number, monthIndex0: number, locale = "sr-Latn-RS") {
   return new Date(year, monthIndex0, 1).toLocaleString(locale, {
     month: "long",

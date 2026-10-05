@@ -46,6 +46,10 @@ model Recurring {
   period      Period
   amountCents Int
   description String   @default("")
+  /// First day the entry applies. Backfilled by the seed for older rows.
+  startDate   DateTime?
+  /// Last day the entry applies; null means open-ended.
+  endDate     DateTime?
   userId      String
   categoryId  String
   createdAt   DateTime @default(now())

@@ -30,6 +30,10 @@ export function RecurringForm({
   const [categoryId, setCategoryId] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>(() =>
+    new Date().toISOString().slice(0, 10)
+  );
+  const [endDate, setEndDate] = useState<string>("");
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -45,6 +49,9 @@ export function RecurringForm({
     if (!userId) return setError("Izaberite osobu.");
     if (!categoryId) return setError("Izaberite kategoriju.");
     if (!amount) return setError("Unesite iznos.");
+    if (!startDate) return setError("Unesite datum početka.");
+    if (endDate && endDate < startDate)
+      return setError("Datum završetka je pre datuma početka.");
 
     const fd = new FormData();
     fd.set("userId", userId);
@@ -53,11 +60,14 @@ export function RecurringForm({
     fd.set("amount", amount);
     fd.set("kind", kind);
     fd.set("period", period);
+    fd.set("startDate", startDate);
+    fd.set("endDate", endDate);
     start(async () => {
       try {
         await action(fd);
         setAmount("");
         setDescription("");
+        setEndDate("");
         setCategoryId("");
         setOpen(false);
       } catch (err: unknown) {
@@ -197,6 +207,28 @@ export function RecurringForm({
               </button>
             );
           })}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <div className="label mb-1">Od</div>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="input"
+          />
+        </div>
+        <div>
+          <div className="label mb-1">Do (opciono)</div>
+          <input
+            type="date"
+            value={endDate}
+            min={startDate || undefined}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="input"
+          />
         </div>
       </div>
 

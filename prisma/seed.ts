@@ -109,6 +109,27 @@ async function main() {
     });
   }
 
+  // Recurring entries created before start/end dates existed: treat them as
+  // having started on the date of the oldest entry, open-ended.
+  const undatedCount = await prisma.recurring.count({ where: { startDate: null } });
+  if (undatedCount > 0) {
+    const [oldestTxn, oldestRec] = await Promise.all([
+      prisma.transaction.findFirst({ orderBy: { date: "asc" }, select: { date: true } }),
+      prisma.recurring.findFirst({ orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
+    ]);
+    const candidates = [oldestTxn?.date, oldestRec?.createdAt].filter(
+      (d): d is Date => d instanceof Date
+    );
+    const oldest = new Date(Math.min(...candidates.map((d) => d.getTime())));
+    const startDate = new Date(
+      Date.UTC(oldest.getUTCFullYear(), oldest.getUTCMonth(), oldest.getUTCDate())
+    );
+    await prisma.recurring.updateMany({
+      where: { startDate: null },
+      data: { startDate },
+    });
+  }
+
   // Settings: ensure a row exists, and migrate any older locale value
   // (de-DE, sr-RS, sr) to the Serbian Latin variant once.
   const settings = await prisma.settings.findUnique({ where: { id: 1 } });

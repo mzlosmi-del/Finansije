@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/db";
 import { Kind, Period } from "@prisma/client";
-import { monthRange, monthHasStarted } from "@/lib/dates";
+import {
+  monthRange,
+  monthHasStarted,
+  recurringActiveInMonth,
+} from "@/lib/dates";
 
 export type MonthlyPoint = {
   year: number;
@@ -31,7 +35,13 @@ export async function getMonthlyChartData(
     prisma.settings.findUnique({ where: { id: 1 } }),
     prisma.recurring.findMany({
       where: userId ? { userId } : undefined,
-      select: { kind: true, period: true, amountCents: true },
+      select: {
+        kind: true,
+        period: true,
+        amountCents: true,
+        startDate: true,
+        endDate: true,
+      },
     }),
     prisma.transaction.findMany({
       where: {
@@ -42,18 +52,18 @@ export async function getMonthlyChartData(
     }),
   ]);
 
-  const monthlyRecRevenue = recurring
-    .filter((r) => r.kind === Kind.REVENUE)
-    .reduce(
-      (s, r) => s + (r.period === Period.MONTHLY ? r.amountCents : r.amountCents / 12),
-      0
-    );
-  const monthlyRecExpense = recurring
-    .filter((r) => r.kind === Kind.EXPENSE)
-    .reduce(
-      (s, r) => s + (r.period === Period.MONTHLY ? r.amountCents : r.amountCents / 12),
-      0
-    );
+  // Recurring amount of the given kind that applies to one month, honoring
+  // each entry's start/end dates.
+  const recurringFor = (kind: Kind, year: number, monthIndex0: number) =>
+    recurring
+      .filter(
+        (r) => r.kind === kind && recurringActiveInMonth(r, year, monthIndex0)
+      )
+      .reduce(
+        (s, r) =>
+          s + (r.period === Period.MONTHLY ? r.amountCents : r.amountCents / 12),
+        0
+      );
 
   const locale = settings?.locale ?? "sr-Latn-RS";
   const points: MonthlyPoint[] = months.map(({ year, monthIndex0 }) => {
@@ -70,8 +80,8 @@ export async function getMonthlyChartData(
     // Only project recurring amounts onto months that have already started;
     // future months show only the entries that have actually happened.
     const started = monthHasStarted(year, monthIndex0);
-    const recRevenue = started ? monthlyRecRevenue : 0;
-    const recExpense = started ? monthlyRecExpense : 0;
+    const recRevenue = started ? recurringFor(Kind.REVENUE, year, monthIndex0) : 0;
+    const recExpense = started ? recurringFor(Kind.EXPENSE, year, monthIndex0) : 0;
     return {
       year,
       monthIndex0,

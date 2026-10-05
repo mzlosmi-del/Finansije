@@ -6,6 +6,7 @@ import { Kind, Period } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { parseAmountToCents } from "@/lib/money";
 import { setCurrentPerson } from "@/lib/person";
+import { parseDateInput } from "@/lib/dates";
 
 function asKind(v: FormDataEntryValue | null): Kind {
   return v === "REVENUE" ? Kind.REVENUE : Kind.EXPENSE;
@@ -54,11 +55,25 @@ export async function addRecurringAction(formData: FormData) {
   const amountCents = parseAmountToCents(String(formData.get("amount") ?? ""));
   const kind = asKind(formData.get("kind"));
   const period = asPeriod(formData.get("period"));
+  const startDate = parseDateInput(formData.get("startDate")) ?? new Date();
+  const endDate = parseDateInput(formData.get("endDate"));
   if (!userId || !categoryId || amountCents <= 0) {
     throw new Error("Nedostaje osoba, kategorija ili iznos.");
   }
+  if (endDate && endDate < startDate) {
+    throw new Error("Datum završetka je pre datuma početka.");
+  }
   await prisma.recurring.create({
-    data: { userId, categoryId, description, amountCents, kind, period },
+    data: {
+      userId,
+      categoryId,
+      description,
+      amountCents,
+      kind,
+      period,
+      startDate,
+      endDate,
+    },
   });
   revalidatePath("/recurring");
   revalidatePath("/");
@@ -77,6 +92,26 @@ export async function updateRecurringAction(formData: FormData) {
     data: { description, amountCents, period, userId, categoryId },
   });
   revalidatePath("/recurring");
+  revalidatePath("/");
+}
+
+export async function updateRecurringDatesAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const startDate = parseDateInput(formData.get("startDate"));
+  const endDate = parseDateInput(formData.get("endDate"));
+  if (!startDate) {
+    throw new Error("Unesite datum početka.");
+  }
+  if (endDate && endDate < startDate) {
+    throw new Error("Datum završetka je pre datuma početka.");
+  }
+  await prisma.recurring.update({
+    where: { id },
+    data: { startDate, endDate },
+  });
+  revalidatePath("/recurring");
+  revalidatePath("/charts");
   revalidatePath("/");
 }
 
